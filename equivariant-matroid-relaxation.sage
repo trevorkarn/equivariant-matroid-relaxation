@@ -92,9 +92,21 @@ def restrict_symmetric_irreducible(G, mu):
         sage: G = MathieuGroup(11)
         sage: restrict_irreducible(G, [7,2,2]).values()
         [385, 9, 1, -1, -1, -2, 0, 0, 0, 0]
+        
+    TESTS::
+        
+        sage: G = MathieuGroup(11)
+        sage: restrict_irreducible(G, [7])
+        Traceback (most recent call last):
+        ...
+        ValueError: [7] is not a partition of len(G.domain())=11
+        
     """
+    if len(G.domain()) != Partition(mu).size():
+        raise ValueError(f"{mu} is not a partition of {len(G.domain())=}")
+    
     # Gap does not provide conjugacy classes in a consistent order. Thus, we
-    # create an index function in order to keep track of the conjugacy classes
+    # create an index function in order to keep track of the conjugacy classes.
     indexing_cf_vals = range(len(G.conjugacy_classes()))
     indexing_cf = ClassFunction(G, indexing_cf_vals)
 
@@ -124,3 +136,43 @@ def restrict_symmetric_irreducible(G, mu):
                                  [chi[c[0].cycle_type()] for c in G.conjugacy_classes()]), key = lambda x: x[0])
 
     return ClassFunction(G,[b for a,b in sorted_chi_vals])
+    
+def restrict_symmetric_repn(G, irreps):
+    r"""
+    Return the restriction of a symmetric group representation to ``G``.
+    
+    The symmetric group is semisimple, so it decomposes into a list of irreducibles.
+    This function allows the user to get the restriction of a symmetric group representation
+    to a permutation group ``G`` by passing a list of :class:`sage.combinat.partition.Partition``s.
+    The list ``irreps`` is interpreted as the partitions indexing the decomposition of the symmetric
+    group into irreducible representations.
+    
+    INPUT:
+    
+    - ``G`` -- a :class:`sage.groups.perm_gps.permgroup.PermutationGroup`
+    - ``irreps`` -- a list of partitions corresponding to the decomposition
+      of a symmetric group representation into irreducibles
+    
+    OUTPUT:
+    
+    - ``chi`` -- a :func:`sage.groups.class_function.ClassFunction` on ``G``
+      corresponding to the restriction of the symmetric group representation
+    
+    EXAMPLES:
+    
+        sage: G = MathieuGroup(11)
+        sage: restrict_symmetric_repn(G, [[7,2,2]]).values()
+        [385, 9, 1, -1, -1, -2, 0, 0, 0, 0]
+        
+        sage: restrict_symmetric_repn(SymmetricGroup(3), [[2,1], [1,1,1]]).decompose()
+        ((1, Character of Symmetric group of order 3! as a permutation group),
+         (1, Character of Symmetric group of order 3! as a permutation group))
+    """
+    
+    # initialize the 0 class function
+    chi = ClassFunction(G, [0]*len(G.conjugacy_classes()))
+    
+    for mu in irreps:
+        chi += restrict_symmetric_irreducible(G, mu)
+        
+    return chi
