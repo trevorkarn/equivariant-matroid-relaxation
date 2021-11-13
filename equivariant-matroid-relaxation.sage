@@ -67,3 +67,60 @@ def equivariant_steiner_hyperplane(d, k, n):
         # if the stabilizer is the right size, we have found a
         # representative hyperplane
         if len(stab) == stab_size: return H
+        
+def restrict_symmetric_irreducible(G, mu):
+    r"""
+    Return the character of `G`.
+    
+    The permutation group `G` can be naturally included into a bigger
+    symmetric group, say `S_N`, which acts by permuting the same 
+    underlying set. This function computes the character of the restriction
+    of the irreducible `S_N` representation indexed by `mu` to `G`.
+    
+    INPUT:
+    
+    - ``G`` -- an instance of a :class:`sage.groups.perm_gps.permgroup.PermutationGroup`
+    - ``mu`` -- a partition of `N` - the size of ``G.domain()``
+    
+    OUTPUT:
+    
+    - ``chi`` -- a :func:`sage.groups.class_function.ClassFunction` corresponding
+      to the restriction of the `S_N` irreducible representation indexed by `mu`
+      
+    EXAMPLES:
+    
+        sage: G = MathieuGroup(11)
+        sage: restrict_irreducible(G, [7,2,2]).values()
+        [385, 9, 1, -1, -1, -2, 0, 0, 0, 0]
+    """
+    # Gap does not provide conjugacy classes in a consistent order. Thus, we
+    # create an index function in order to keep track of the conjugacy classes
+    indexing_cf_vals = range(len(G.conjugacy_classes()))
+    indexing_cf = ClassFunction(G, indexing_cf_vals)
+
+    # We will apply the Murnagan-Nakayama rule to quickly compute character values
+    from sage.combinat.sf.sfa import zee
+    Sym = SymmetricFunctions(QQ)
+    s = Sym.schur()
+    p = Sym.powersum()
+
+    # Initialize a lookup table. Keys will be cycle types, values will be the character value.
+    chi = {}
+
+    for t in [c[0].cycle_type() for c in G.conjugacy_classes()]:
+        try:
+            # Use the expression of the Murnagan-Nakayama rule
+            # in terms of symmetric functions
+            chi[t] = p(s[mu]).monomial_coefficients()[t]*zee(t)
+        except KeyError:
+            # If the character value is 0, the cycle type ``t``
+            # will not appear in the expansion of 
+            # ``.monomial_coefficients()`` and a KeyError will
+            # be raised.
+            chi[t] = 0
+    
+    # Give a list of the character values, sorted into the order which Gap expects
+    sorted_chi_vals = sorted(zip([int(indexing_cf(g.representative())) for g in G.conjugacy_classes()],
+                                 [chi[c[0].cycle_type()] for c in G.conjugacy_classes()]), key = lambda x: x[0])
+
+    return ClassFunction(G,[b for a,b in sorted_chi_vals])
