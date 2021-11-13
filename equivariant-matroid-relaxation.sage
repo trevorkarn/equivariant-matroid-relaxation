@@ -184,17 +184,16 @@ def slack_polynomial_coefficient(k, h, i):
     
     INPUT:
     
-    - ``k`` -- an integer
-    - ``h`` -- an integer
-    - ``i`` -- an integer
+    - ``k`` -- an integer, the rank of the matroid
+    - ``h`` -- an integer, the size of a hyperplane
+    - ``i`` -- an integer, the degree of the coefficient sought
     
     OUTPUT:
     
-    - ``chi`` -- the character coresponding to coefficient of `t^i` in the polynomial.
+    - ``chi`` -- the character corresponding to coefficient of `t^i` in `p_{k,h}^{S_h}`.
     """
-    
     skew_partition_outer = [h - 2 * i + 1] + [k - 2 * i + 1] * i
-    skew_partition_inner = [h - 2 * i] + [k - 2 * i - 1] * (i - 1)
+    skew_partition_inner = [k - 2 * i] + [k - 2 * i - 1] * (i - 1)
     
     s = Sym.schur()
     
@@ -210,15 +209,17 @@ def slack_polynomial_coefficient(k, h, i):
         
     return chi
     
-def ind_res_slack_polynomial_coeff(k,h,i,V,W,H):
+def ind_res_slack_polynomial_coeff(k,i,W,H):
     r"""
-    Compute the induction from ``V`` to ``W`` of the restriction of `p^{S_h}_{k,h}`.
+    Compute the induction from the stabilizer of ``H`` to ``W`` of the restriction of `p^{S_h}_{k,h}`.
     
     Let `S_h` act on the hyperplane `H`.
-    
-
     """
+    V = W.stabilizer(H, "OnSets")
+    
     Sh = SymmetricGroup(domain=H)
+    
+    h = len(H)
     
     chi = slack_polynomial_coefficient(k, h, i)
     
@@ -226,10 +227,38 @@ def ind_res_slack_polynomial_coeff(k,h,i,V,W,H):
     # create an index function in order to keep track of the conjugacy classes.
     stab_index_cf = ClassFunction(V, range(len(V.conjugacy_classes())))
 
-    sorted_res_chi_values = sorted(zip([int(stab_index_char(g.representative())) for g in H.conjugacy_classes()],
-                             [chi(Sd.prod([Sd(c) for c in w[0].cycles() if c in Sd])) for w in H.conjugacy_classes()]),
-                             key = lambda x: x[0])
+    # We consider Sh to be included in an implicitly larger group where the
+    # representaton of Sh is understood to be a representation of Sh tensored
+    # with the trivial representation of everything else. Thus, the character
+    # value on elements outside of Sh is 1, and so we only need to consider 
+    # cycles of elements of the stabilizer of H which are inside of Sh.
+    
+    res_chi_values = [chi(Sh.prod([Sh(c) for c in w[0].cycles() if c in Sh])) for w in V.conjugacy_classes()]
+    
+    sorted_res_chi_values = sorted(zip([int(stab_index_cf(g.representative())) for g in V.conjugacy_classes()],
+                             res_chi_values), key = lambda x: x[0])
                              
-    res_p = ClassFunction(stab, [b for a,b, in sorted_res_chi_values])
+    res_p = ClassFunction(V, [b for a,b, in sorted_res_chi_values])
     
     return res_p.induct(W)
+    
+def ind_res_slack_polynomial(k,W,H):
+    r"""
+    We know that the constant coefficient will be `0` and that the top coefficient will
+    be strictly less than half of the rank of the matroid, so we may restrict our
+    computation to the values `\{1, 2, \ldots, \lfloor k/2 \rfloor - 1\}
+    """
+    
+    i = 1
+    nonzero = True
+    
+    poly_dict = dict()
+    
+    while nonzero == True:
+        try:
+            poly_dict[i] = ind_res_slack_polynomial_coeff(k,i,W,H)
+        except ValueError:
+            nonzero = False
+        i += 1
+
+    return poly_dict
