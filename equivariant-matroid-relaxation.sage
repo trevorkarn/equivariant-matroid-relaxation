@@ -1,3 +1,5 @@
+Sym = SymmetricFunctions(QQ)
+
 def equivariant_steiner_hyperplane(d, k, n):
     r"""
     Find a hyperplane of the Steiner system `S(d, k, n)`.
@@ -112,7 +114,6 @@ def restrict_symmetric_irreducible(G, mu):
 
     # We will apply the Murnagan-Nakayama rule to quickly compute character values
     from sage.combinat.sf.sfa import zee
-    Sym = SymmetricFunctions(QQ)
     s = Sym.schur()
     p = Sym.powersum()
 
@@ -176,3 +177,59 @@ def restrict_symmetric_repn(G, irreps):
         chi += restrict_symmetric_irreducible(G, mu)
         
     return chi
+    
+def slack_polynomial_coefficient(k, h, i):
+    r"""
+    Return the coefficient of `t^i` in the equivariant polynomial `p_{k,h}^{S_h}`.
+    
+    INPUT:
+    
+    - ``k`` -- an integer
+    - ``h`` -- an integer
+    - ``i`` -- an integer
+    
+    OUTPUT:
+    
+    - ``chi`` -- the character coresponding to coefficient of `t^i` in the polynomial.
+    """
+    
+    skew_partition_outer = [h - 2 * i + 1] + [k - 2 * i + 1] * i
+    skew_partition_inner = [h - 2 * i] + [k - 2 * i - 1] * (i - 1)
+    
+    s = Sym.schur()
+    
+    skew_schur = s[skew_partition_outer].skew_by(s[skew_partition_inner])
+    
+    chi = None
+    
+    for mu, c in skew_schur.monomial_coefficients().items():
+        if not chi:
+            chi = SymmetricGroupRepresentation(mu, implementation='specht').to_character()*c
+        else:
+            chi += SymmetricGroupRepresentation(mu, implementation='specht').to_character()*c
+        
+    return chi
+    
+def ind_res_slack_polynomial_coeff(k,h,i,V,W,H):
+    r"""
+    Compute the induction from ``V`` to ``W`` of the restriction of `p^{S_h}_{k,h}`.
+    
+    Let `S_h` act on the hyperplane `H`.
+    
+
+    """
+    Sh = SymmetricGroup(domain=H)
+    
+    chi = slack_polynomial_coefficient(k, h, i)
+    
+    # Gap does not provide conjugacy classes in a consistent order. Thus, we
+    # create an index function in order to keep track of the conjugacy classes.
+    stab_index_cf = ClassFunction(V, range(len(V.conjugacy_classes())))
+
+    sorted_res_chi_values = sorted(zip([int(stab_index_char(g.representative())) for g in H.conjugacy_classes()],
+                             [chi(Sd.prod([Sd(c) for c in w[0].cycles() if c in Sd])) for w in H.conjugacy_classes()]),
+                             key = lambda x: x[0])
+                             
+    res_p = ClassFunction(stab, [b for a,b, in sorted_res_chi_values])
+    
+    return res_p.induct(W)
