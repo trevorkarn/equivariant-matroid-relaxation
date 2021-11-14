@@ -287,3 +287,49 @@ def ind_res_slack_polynomial(k,W,H):
         i += 1
 
     return poly_dict
+
+def uniform_equivariant_KL_polynomial(m, d, i):
+    r"""
+    The `i`th coefficient of the uniform matroid Kazhdan-Lusztig polynomial.
+
+    Following the notation of :arxiv:`2105.08546`, this computes the coefficients
+    of the `S_{m+d}`-equivariant Kazhdan-Lusztig polynomial of the uniform matroid
+    `U_{m,d}` of rank-`d` on a groundset of size `m+d`.
+
+    INPUT:
+
+    - ``m`` -- an integer, `d` less than the size of the groundset 
+    - ``d`` -- an integer, the rank of the matroid
+    - ``i`` -- an integer, the degree of the coefficient sought
+
+    OUTPUT:
+
+    - ``chi`` -- a ``ClassFunction`` representing the character of the `S_{m+d}`
+      representation which is the `i`th coefficient of the Kazhdan-Lusztig
+      polynomial.
+    """
+
+    if i == 0: # the constant coefficient is always the trivial representation
+        return SymmetricGroupRepresentation([m+d],'specht')
+    elif i > floor((d - 1) / 2):
+        # if `i` is too big, then the coefficient is 0
+        return ClassFunction(SymmetricGroup(m+d), [0]*len(Partitions(m+d)))
+
+    # we appeal to theorem 3.7 of :arxiv:`2105.08546`
+    skew_partition_outer = [m + d - 2 * i] + i * [d - 2 * i + 1]
+    skew_partition_inner = i * [d - 2 * i - 1]
+
+    s = Sym.schur()
+    s[skew_partition_outer].skew_by(s[skew_partition_inner])
+
+    chi = None
+    
+    # We know it will be multiplicity free (c.f. :arxiv:`1605.01777`) so
+    # we don't worry about the coefficients
+    for mu in skew_schur.support():
+        if not chi:
+            chi = SymmetricGroupRepresentation(mu, implementation='specht').to_character()
+        else:
+            chi += SymmetricGroupRepresentation(mu, implementation='specht').to_character()
+        
+    return chi
