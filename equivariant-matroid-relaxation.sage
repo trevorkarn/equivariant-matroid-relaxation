@@ -211,9 +211,22 @@ def slack_polynomial_coefficient(k, h, i):
     
 def ind_res_slack_polynomial_coeff(k,i,W,H):
     r"""
-    Compute the induction from the stabilizer of ``H`` to ``W`` of the restriction of `p^{S_h}_{k,h}`.
+    Compute the induction from the stabilizer of ``H`` to ``W`` of the restriction of `\{t^i\}p^{S_h}_{k,h}`.
     
     Let `S_h` act on the hyperplane `H`.
+    
+    INPUT:
+    
+    - ``k`` -- the rank of the matroid
+    - ``i`` -- the degree of the coefficient you want to compute
+    - ``W`` -- the group you are inducting up to
+    - ``H`` -- the hyperplane stabilized by a subgroup of ``W``
+    
+    OUTPUT:
+    
+    - a ``ClassFunction`` representing the character of the induction of
+      the restriction of the `i`th coefficient of `p^{S_h}_{k,h}`.
+    
     """
     V = W.stabilizer(H, "OnSets")
     
@@ -244,11 +257,23 @@ def ind_res_slack_polynomial_coeff(k,i,W,H):
     
 def ind_res_slack_polynomial(k,W,H):
     r"""
-    We know that the constant coefficient will be `0` and that the top coefficient will
-    be strictly less than half of the rank of the matroid, so we may restrict our
-    computation to the values `\{1, 2, \ldots, \lfloor k/2 \rfloor - 1\}
-    """
+    The difference between the Kazhdan-Lusztig polynomial of a rank ``k`` matroid `M`,
+    and the Kazhdan-Lusztig polynomial of its relaxation at the stressed hyperplane ``H``.
     
+    INPUT:
+    
+    - ``k`` -- the rank of the matroid, a parameter in `p^{S_h}_{k,h}`
+    - ``W`` -- the group acting on the matroid equivariantly
+    - ``H`` -- the stressed hyperplane which is being relaxed
+    
+    OUTPUT:
+    
+    - ``poly_dict`` -- a dictionary whose keys are integers representing the
+      degree of the coefficient and whose values are ``ClassFunction``s corresponding
+      to the character of the representation that is the coefficient.
+    """
+    # We know the constant term of the slack term will be 0, since the constant
+    # term of every Kazhdan-Lusztig polynomial is the trivial representation.
     i = 1
     nonzero = True
     
