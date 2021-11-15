@@ -2,7 +2,7 @@
 
 Ferroni, Nasr, and Vecchi show a remarkable connection between the Kazhdan-Lusztig polynomial of a matroid and the operation of matroid relaxation. Forthcoming work shows this extends to an equivariant version. This code computes the decomposition into irreducible Mathieu representations of the polynomial corresponding to various Steiner systems.
 
-For example, we can compute the equivariant Kazhdan-Lusztig polynomial of the largest known Steiner system $S(5, 8, 24)$:
+For example, we can compute the equivariant Kazhdan-Lusztig polynomial of the largest known Steiner system *S(5, 8, 24)*:
 
 	sage: load('equivariant-matroid-relaxation.sage')
 	sage: steiner_system_KL_coeff(d, k, n, 1).values()
@@ -25,6 +25,6 @@ For more information about `ClassFunction`s in SageMath, [see the SageMath docum
 **WARNING**
 
 We use SageMath functions which are wrappers around GAP functions. GAP does not provide conjugacy classes
-in any standard order, nor is it consistent from function-call to function-call. (For more, see [GAP's documentation](https://www.gap-system.org/Manuals/doc/ref/chap39.html#X7D474F8F87E4E5D9))). Thus, values obtained via this code will
+in any standard order, nor is it consistent from function-call to function-call. (For more, see [GAP's documentation](https://www.gap-system.org/Manuals/doc/ref/chap39.html#X7D474F8F87E4E5D9)). Thus, values obtained via this code will
 agree with the forthcoming paper containing these results as a set, but will not neccessarily be listed in the same
 order.
