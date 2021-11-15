@@ -42,14 +42,14 @@ def equivariant_steiner_hyperplane(d, k, n):
 
     from itertools import combinations
     
-    # The existence of a hyperplane containing the subset `\{1,\ldots, k\}`
+    # The existence of a hyperplane containing the subset `\{1,\ldots, d\}`
     # is guaranteed.
-    guaranteed_hyperplane_subset = list(range(1, k+1))
+    guaranteed_hyperplane_subset = list(range(1, d+1))
     
     # Get the size of the orbit of ``H`` which we desire.
     # This should be the number of hyperplanes of `S(k, d, n)` for G to
     # act transitively. 
-    orbit_size = binomial(n, k)/binomial(d, k)
+    orbit_size = binomial(n, d)/binomial(k, d)
     
     # Get the size of the stabilizer of the hyperplane we are looking for
     # by the orbit stabilizer theorem
@@ -57,7 +57,7 @@ def equivariant_steiner_hyperplane(d, k, n):
 
     # The sets `A` such that `[k] \cup A` could be a hyperplane of the
     # Steiner system
-    hyperplane_difference_candidates = list(combinations(range(k+1, n+1), d-k))
+    hyperplane_difference_candidates = list(combinations(range(d + 1, n + 1), k - d))
 
     for complement in hyperplane_difference_candidates:
         # define the candidate hyperplane
@@ -178,22 +178,22 @@ def restrict_symmetric_repn(G, irreps):
         
     return chi
     
-def slack_polynomial_coefficient(k, h, i):
+def slack_polynomial_coefficient(r, h, i):
     r"""
-    Return the coefficient of `t^i` in the equivariant polynomial `p_{k,h}^{S_h}`.
+    Return the coefficient of `t^i` in the equivariant polynomial `p_{r,h}^{S_h}`.
     
     INPUT:
     
-    - ``k`` -- an integer, the rank of the matroid
+    - ``r`` -- an integer, the rank of the matroid
     - ``h`` -- an integer, the size of a hyperplane
     - ``i`` -- an integer, the degree of the coefficient sought
     
     OUTPUT:
     
-    - ``chi`` -- the character corresponding to coefficient of `t^i` in `p_{k,h}^{S_h}`.
+    - ``chi`` -- the character corresponding to coefficient of `t^i` in `p_{r,h}^{S_h}`.
     """
-    skew_partition_outer = [h - 2 * i + 1] + [k - 2 * i + 1] * i
-    skew_partition_inner = [k - 2 * i] + [k - 2 * i - 1] * (i - 1)
+    skew_partition_outer = [h - 2 * i + 1] + [r - 2 * i + 1] * i
+    skew_partition_inner = [r - 2 * i] + [r - 2 * i - 1] * (i - 1)
     
     s = Sym.schur()
     
@@ -209,15 +209,15 @@ def slack_polynomial_coefficient(k, h, i):
         
     return chi
     
-def ind_res_slack_polynomial_coeff(k,i,W,H):
+def ind_res_slack_polynomial_coeff(r,i,W,H):
     r"""
-    Compute the induction from the stabilizer of ``H`` to ``W`` of the restriction of `\{t^i\}p^{S_h}_{k,h}`.
+    Compute the induction from the stabilizer of ``H`` to ``W`` of the restriction of `\{t^i\}p^{S_h}_{r,h}`.
     
     Let `S_h` act on the hyperplane `H`.
     
     INPUT:
     
-    - ``k`` -- the rank of the matroid
+    - ``r`` -- the rank of the matroid
     - ``i`` -- the degree of the coefficient you want to compute
     - ``W`` -- the group you are inducting up to
     - ``H`` -- the hyperplane stabilized by a subgroup of ``W``
@@ -225,7 +225,7 @@ def ind_res_slack_polynomial_coeff(k,i,W,H):
     OUTPUT:
     
     - a ``ClassFunction`` representing the character of the induction of
-      the restriction of the `i`th coefficient of `p^{S_h}_{k,h}`.
+      the restriction of the `i`th coefficient of `p^{S_h}_{r,h}`.
     
     """
     V = W.stabilizer(H, "OnSets")
@@ -234,7 +234,7 @@ def ind_res_slack_polynomial_coeff(k,i,W,H):
     
     h = len(H)
     
-    chi = slack_polynomial_coefficient(k, h, i)
+    chi = slack_polynomial_coefficient(r, h, i)
     
     # Gap does not provide conjugacy classes in a consistent order. Thus, we
     # create an index function in order to keep track of the conjugacy classes.
@@ -288,13 +288,14 @@ def ind_res_slack_polynomial(k,W,H):
 
     return poly_dict
 
-def uniform_equivariant_KL_polynomial(m, d, i):
+def uniform_equivariant_KL_polynomial_index(m, d, i):
     r"""
-    The `i`th coefficient of the uniform matroid Kazhdan-Lusztig polynomial.
+    The set of tableaux indexing `i`th coefficient of the uniform matroid
+    Kazhdan-Lusztig polynomial.
 
-    Following the notation of :arxiv:`2105.08546`, this computes the coefficients
-    of the `S_{m+d}`-equivariant Kazhdan-Lusztig polynomial of the uniform matroid
-    `U_{m,d}` of rank-`d` on a groundset of size `m+d`.
+    Following the notation of :arxiv:`2105.08546`, this computes the (index set for)
+    the coefficients of the `S_{m+d}`-equivariant Kazhdan-Lusztig polynomial of the
+    uniform matroid `U_{m,d}` of rank-`d` on a groundset of size `m+d`.
 
     INPUT:
 
@@ -304,9 +305,9 @@ def uniform_equivariant_KL_polynomial(m, d, i):
 
     OUTPUT:
 
-    - ``chi`` -- a ``ClassFunction`` representing the character of the `S_{m+d}`
-      representation which is the `i`th coefficient of the Kazhdan-Lusztig
-      polynomial.
+    - a list of partitions indexing the decomposition of the `i`th coefficient
+      of the `S_{m+d}`-equivariant Kazhdan-Lusztig polynomial of the uniform
+      matroid into irreducibles
     """
 
     if i == 0: # the constant coefficient is always the trivial representation
@@ -320,16 +321,45 @@ def uniform_equivariant_KL_polynomial(m, d, i):
     skew_partition_inner = i * [d - 2 * i - 1]
 
     s = Sym.schur()
-    s[skew_partition_outer].skew_by(s[skew_partition_inner])
-
-    chi = None
+    skew_schur = s[skew_partition_outer].skew_by(s[skew_partition_inner])
     
     # We know it will be multiplicity free (c.f. :arxiv:`1605.01777`) so
     # we don't worry about the coefficients
-    for mu in skew_schur.support():
-        if not chi:
-            chi = SymmetricGroupRepresentation(mu, implementation='specht').to_character()
-        else:
-            chi += SymmetricGroupRepresentation(mu, implementation='specht').to_character()
-        
-    return chi
+    return skew_schur.support()
+
+def steiner_system_KL_coeff(d, k, n, i):
+    r"""
+    Compute the `i`th coefficient of the Kazhdan-Lusztig polynomial of the Steiner
+    system `S(d, k, n)`, acted upon by the Mathieu group `M_n`
+
+    We utilize the relaxation formula for the Kazhdan-Lustig polynomial to compute
+    it for the Steiner system, using the cruicial fact that relaxing `S(d, k, n)`
+    at a stressed hyperplane `H` is the uniform matroid.
+
+    INPUT:
+
+    - ``d`` -- the size of the subset contained in a unique hyperplane
+    - ``k`` -- the block size of the Steiner system
+    - ``n`` -- a positive integer in `\{ 9, 10, 11, 12, 21, 22, 23, 24 \}`
+    - ``i`` -- the degree of the coefficient you seek
+
+    OUTPUT:
+
+    - ``chi`` -- a ``ClassFunction`` representing the character of the
+      degree-`i` coefficient of the Kazhdan-Lusztig polynomial of the
+      Steiner system `S(d, k, n)` acted upon by the Mathieu Group of
+      degree `n`
+    """
+
+    W = MathieuGroup(n)
+
+    steiner_system_rank = d + 1
+    m = n - steiner_system_rank
+
+    PUM = restrict_symmetric_repn(W, uniform_equivariant_KL_polynomial_index(m, steiner_system_rank, i))
+
+    H = equivariant_steiner_hyperplane(d, k, n)
+
+    slack = ind_res_slack_polynomial_coeff(steiner_system_rank, i, W, H)
+
+    return PUM - slack
