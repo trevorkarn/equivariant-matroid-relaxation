@@ -25,6 +25,6 @@ For more information about `ClassFunction`s in SageMath, [see the SageMath docum
 **WARNING**
 
 We use SageMath functions which are wrappers around GAP functions. GAP does not provide conjugacy classes
-in any standard order, nor is it consistent from function-call to function-call. (For more, see [GAP's documentation](https://www.gap-system.org/Manuals/doc/ref/chap39.html#X7D474F8F87E4E5D9))). Thus, values obtained via this code will
+in any standard order, nor is it consistent from function-call to function-call. (For more, see [GAP's documentation](https://www.gap-system.org/Manuals/doc/ref/chap39.html#X7D474F8F87E4E5D9)). Thus, values obtained via this code will
 agree with the forthcoming paper containing these results as a set, but will not neccessarily be listed in the same
 order.
