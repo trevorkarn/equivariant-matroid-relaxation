@@ -2,7 +2,7 @@
 
 Ferroni, Nasr, and Vecchi show a remarkable connection between the Kazhdan-Lusztig polynomial of a matroid and the operation of matroid relaxation. Forthcoming work shows this extends to an equivariant version. This code computes the decomposition into irreducible Mathieu representations of the polynomial corresponding to various Steiner systems.
 
-For example, we can compute the equivariant Kazhdan-Lusztig polynomial of the largest known Steiner system $S(5, 8, 24)$:
+For example, we can compute the equivariant Kazhdan-Lusztig polynomial of the largest known Steiner system *S(5, 8, 24)*:
 
 	sage: load('equivariant-matroid-relaxation.sage')
 	sage: steiner_system_KL_coeff(d, k, n, 1).values()
